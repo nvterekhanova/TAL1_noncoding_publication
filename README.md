@@ -21,3 +21,5 @@ This is a repo for the manuscript:
 * Fig6: Molecular features of the TAL1 downstream enhancer I group.
 
 * Fig7: Schematic of TAL1 enhancer reactivation vs neo-enhancer models.
+
+* Processing_scripts: Scripts for processing raw data.
