@@ -1,0 +1,52 @@
+library(plyr)
+library(dplyr)
+library(reshape)
+library(reshape2)
+library(data.table)
+library(readxl)
+library(RColorBrewer)
+library(ggplot2)
+library(ggrepel)
+library(readxl)
+library(ggbreak)
+
+
+vers <- '20260102'
+
+data_dir='/research_jude/rgs01_jude/groups/zhanggrp/projects/TALL_noncoding/common/nterekha/Data'
+
+
+######################################################################
+# 2025-06-27, plot Indels separately,  and add MYB/GATA3/RUNX1 sites #
+######################################################################
+
+#Plot the region and map all TFBS sites:
+tab <- read.table('out/Downstream_enhancer_I_alterations_and_TFBSs_for_barplot.20260102.tsv',sep='\t',header=T)
+tab_2 <- tab[tab$Type %in% c('Indel','TF'),]
+tab_2$MYB_end_2 <- 47669393
+
+# remove the first GATA3 site, as it is too far away
+tab_2 <- tab_2[!(tab_2$Type=='TF' & tab_2$hg19_start==47669198),]
+
+# switch order between the 1st and 2nd sample
+tab_2 <- tab_2[c(2,1,3:nrow(tab_2)),]
+
+tab_2$SJ_ID_2 <- factor(tab_2$SJ_ID_2, levels=unique(tab_2$SJ_ID_2))
+to_plot <- tab_2
+
+p1 <- ggplot()
+p1 <- p1 + geom_rect(data=to_plot, aes(xmin=hg19_start,xmax=hg19_end,ymin=0,ymax=1, color=Outline, fill=Type))
+p1 <- p1 + geom_vline(xintercept=unique(to_plot$MYB_start), linetype="dashed",color="grey")
+p1 <- p1 + geom_vline(xintercept=unique(to_plot$MYB_end_2), linetype="dashed",color="grey")
+p1 <- p1 + scale_fill_manual(values=c('ITD'='blue','Indel'='blue','TF'='#EF4136'))
+p1 <- p1 + facet_grid(Type + SJ_ID_2~.,  scales='free', space='free', switch='y')
+p1 <- p1 + theme_minimal() + theme(panel.spacing.x = unit(0, "lines"), panel.spacing.y = unit(0, "lines")) + ylab('Sample')
+p1 <- p1 + scale_color_manual(values=c('Short'='black','Long'=NA, 'TF'='grey'), na.value="transparent")
+p1 <- p1 + theme(axis.text.y=element_blank()) +ggtitle('Downstream Enhancer | samples') + theme(strip.placement = "outside",legend.position='bottom',
+panel.grid.major.y=element_blank(), panel.grid.minor.y=element_blank(),axis.ticks.y=element_blank(), axis.ticks.x = element_line(linewidth = 1,
+colour = "black"))
+p1 <- p1 + theme(strip.text.y.left = element_text(angle = 0, hjust = 0.05, vjust = 0.5)) + theme(legend.position='none')
+
+pdf(paste('plots/Summary_enh_gain_I_Indel_samples.hg19_coords.',vers,'.pdf',sep=''),width=5,height=4,useDingbats=F)
+p1
+dev.off()
